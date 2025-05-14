@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace NET472CONSOLE.KeyGen
 {
-    internal class KeyGeneratro
+    internal class KeyGenerator
     {
 
-        public KeyGeneratro() { }
+        public KeyGenerator() { }
 
         public static void Create()
         {

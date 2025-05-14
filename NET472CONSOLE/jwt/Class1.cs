@@ -9,10 +9,11 @@ public class JwtRS256Generator
 {
     private readonly RSACryptoServiceProvider _rsa;
 
-    public JwtRS256Generator(string xmlKey)
+    public JwtRS256Generator(string xmlkey)
     {
-        _rsa = new RSACryptoServiceProvider();
-        _rsa.FromXmlString(xmlKey);
+        _rsa = new RSACryptoServiceProvider(2048);
+        
+        _rsa.FromXmlString(xmlkey);
     }
 
     // 生成 JWT
@@ -34,9 +35,8 @@ public class JwtRS256Generator
             var serializer = new JsonNetSerializer();
             var urlEncoder = new JwtBase64UrlEncoder();
             var validator = new JwtValidator(serializer, new UtcDateTimeProvider());
-            var decoder = new JwtDecoder(serializer, urlEncoder);
-            //decoder.Validate(token, _rsa, verify: true, validator: validator, dateTimeProvider: new UtcDateTimeProvider(), validateSignature: true);
-            //var payload = decoder.Decode(token, _rsa, verify: true);
+            var RS256Algorithm = new RS256Algorithm(_rsa,_rsa);
+            var decoder = new JwtDecoder(serializer,validator,urlEncoder, RS256Algorithm);          
             var jwtpart = new JwtParts(token);
             var payload = decoder.Decode(jwtpart, true);
             Console.WriteLine("JWT Payload: " + payload);
@@ -47,9 +47,6 @@ public class JwtRS256Generator
             Console.WriteLine("JWT Validation Failed: " + ex.Message);
             return false;
         }
-    }
-
-
-   
+    }  
 
 }

@@ -81,7 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="jwt\Class1.cs" />
-    <Compile Include="KeyGen\KeyGeneratro.cs" />
+    <Compile Include="KeyGen\KeyGenerator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
