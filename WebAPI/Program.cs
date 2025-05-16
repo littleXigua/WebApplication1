@@ -19,33 +19,42 @@ namespace WebAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddAuthentication().AddNegotiate(options =>
-            {
-                options.PersistKerberosCredentials = true;
-            });
-
+         
 
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+                options.DefaultAuthenticateScheme = "JwtOrWindows"; // 自定义组合方案
+                options.DefaultChallengeScheme = "JwtOrWindows";
+            }).AddPolicyScheme("JwtOrWindows", "JWT or Windows", options =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
+                // 根据请求头决定使用哪种认证方式
+                options.ForwardDefaultSelector = context =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    string authorization = context.Request.Headers["Authorization"];
+                    if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
+                    {
+                        return JwtBearerDefaults.AuthenticationScheme;
+                    }
+                    return NegotiateDefaults.AuthenticationScheme;
                 };
-            }).AddNegotiate(NegotiateDefaults.AuthenticationScheme, options =>
-            {
-                // Windows/Negotiate 认证配置
-                options.PersistKerberosCredentials = true;
-            });
+            }).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+                        {
+                            options.TokenValidationParameters = new TokenValidationParameters
+                            {
+                                ValidateIssuer = true,
+                                ValidateAudience = true,
+                                ValidateLifetime = true,
+                                ValidateIssuerSigningKey = true,
+                                ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                                ValidAudience = builder.Configuration["Jwt:Audience"],
+                                IssuerSigningKey = new SymmetricSecurityKey(
+                                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                            };
+                        }).AddNegotiate(NegotiateDefaults.AuthenticationScheme, options =>
+                        {
+                            // Windows/Negotiate 认证配置
+                            options.PersistKerberosCredentials = true;
+                        });
 
             var app = builder.Build();
 
