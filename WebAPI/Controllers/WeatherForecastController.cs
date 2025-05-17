@@ -10,12 +10,10 @@ namespace WebAPI.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize(AuthenticationSchemes = "jwt")]
+    [Authorize(Roles ="Admin1")]
     public class WeatherForecastController : ControllerBase
     {
-
-
         private IRsaKeyService ras;
-
 
         private static readonly string[] Summaries = new[]
         {
@@ -33,10 +31,11 @@ namespace WebAPI.Controllers
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {
+            var role=User.IsInRole("Admin");
 
-           //var pkey= ras.GetPrivateKey();
+            //var pkey= ras.GetPrivateKey();
 
-           // var publicKey = ras.GetPublicKey();
+            // var publicKey = ras.GetPublicKey();
 
             var privateKey = """
     -----BEGIN RSA PRIVATE KEY-----
@@ -77,7 +76,7 @@ namespace WebAPI.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-        new Claim(ClaimTypes.Name, "username"),
+        new Claim(ClaimTypes.Name, "username"), new Claim(ClaimTypes.Role, "Admin")
         // Add other claims as needed
     }),
                 Expires = DateTime.UtcNow.AddHours(1),

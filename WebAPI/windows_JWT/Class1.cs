@@ -58,9 +58,9 @@ namespace WebAPI
         //Audience = "your-audience",
 
         ValidateIssuer = true,
-        ValidIssuer = "your-issuer11",
+        ValidIssuer = "your-issuer",
         ValidateAudience = true,
-        ValidAudience = "your-audience11",
+        ValidAudience = "your-audience",
         ValidateIssuerSigningKey = true,
         IssuerSigningKey= signingKey        
     };
