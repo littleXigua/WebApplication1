@@ -1,4 +1,13 @@
 ﻿
+首先，在 Program.cs 中启用 Windows 认证：
+
+csharp
+var builder = WebApplication.CreateBuilder(args);
+
+// 添加 Windows 认证
+builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+    .AddNegotiate();
+
 
 csharp
 var app = builder.Build();

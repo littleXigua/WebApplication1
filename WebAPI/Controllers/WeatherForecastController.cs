@@ -9,8 +9,8 @@ namespace WebAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize(AuthenticationSchemes = "jwt")]
-    [Authorize(Roles ="Admin1")]
+    //[Authorize]
+    //[Authorize(Roles ="Admin1")]
     public class WeatherForecastController : ControllerBase
     {
         private IRsaKeyService ras;

@@ -8,7 +8,7 @@ public class CustomTokenMiddleware
     public CustomTokenMiddleware(RequestDelegate next, IConfiguration configuration)
     {
         _next = next;
-        _expectedToken = "";
+        _expectedToken = "123";
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -21,11 +21,11 @@ public class CustomTokenMiddleware
         }
 
         // 检查是否已通过 Windows 认证
-        if (context.User!=null && context.User.Identity!=null &&!context.User.Identity.IsAuthenticated)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return;
-        }
+        //if (context.User!=null && context.User.Identity!=null &&!context.User.Identity.IsAuthenticated)
+        //{
+        //    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        //    return;
+        //}
 
         // 验证自定义 token
         if (!context.Request.Headers.TryGetValue("X-Custom-Token", out var token) ||
