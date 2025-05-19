@@ -1,0 +1,97 @@
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
+using Microsoft.IdentityModel.Tokens;
+
+public class JwtValidator
+{
+    private readonly RSA _rsa;
+    private readonly TokenValidationParameters _validationParameters;
+
+    /// <summary>
+    /// 使用PEM格式的公钥初始化验证器
+    /// </summary>
+    /// <param name="publicKeyPem">PEM格式的公钥</param>
+    /// <param name="issuer">签发者（可选）</param>
+    /// <param name="audience">接收方（可选）</param>
+    public JwtValidator(string publicKeyPem, string issuer = null, string audience = null)
+    {
+        _rsa = RSA.Create();
+        _rsa.ImportFromPem(publicKeyPem);
+        
+        _validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new RsaSecurityKey(_rsa),
+            ValidateIssuer = !string.IsNullOrEmpty(issuer),
+            ValidIssuer = issuer,
+            ValidateAudience = !string.IsNullOrEmpty(audience),
+            ValidAudience = audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(5) // 允许的时钟偏移
+        };
+    }
+
+    /// <summary>
+    /// 验证JWT Token并返回ClaimsPrincipal
+    /// </summary>
+    /// <param name="token">JWT Token</param>
+    /// <returns>包含声明的ClaimsPrincipal</returns>
+    /// <exception cref="SecurityTokenException">当验证失败时抛出</exception>
+    public System.Security.Claims.ClaimsPrincipal ValidateToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        
+        try
+        {
+            return tokenHandler.ValidateToken(token, _validationParameters, out _);
+        }
+        catch (SecurityTokenExpiredException)
+        {
+            throw new SecurityTokenException("Token has expired");
+        }
+        catch (SecurityTokenInvalidSignatureException)
+        {
+            throw new SecurityTokenException("Invalid token signature");
+        }
+        catch (Exception ex)
+        {
+            throw new SecurityTokenException($"Token validation failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 验证JWT Token但不抛出异常
+    /// </summary>
+    /// <param name="token">JWT Token</param>
+    /// <param name="principal">输出ClaimsPrincipal</param>
+    /// <returns>验证是否成功</returns>
+    public bool TryValidateToken(string token, out System.Security.Claims.ClaimsPrincipal principal)
+    {
+        principal = null;
+        var tokenHandler = new JwtSecurityTokenHandler();
+        
+        try
+        {
+            principal = tokenHandler.ValidateToken(token, _validationParameters, out _);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 从Token中读取声明而不验证签名
+    /// (仅用于调试，不应用于生产环境)
+    /// </summary>
+    public System.Security.Claims.ClaimsPrincipal ReadUnverifiedClaims(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var jwtToken = tokenHandler.ReadJwtToken(token);
+        
+        return new System.Security.Claims.ClaimsPrincipal(
+            new System.Security.Claims.ClaimsIdentity(jwtToken.Claims));
+    }
+}
