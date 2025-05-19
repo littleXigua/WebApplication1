@@ -1,0 +1,125 @@
+public interface ICacheService
+{
+    Task<T> GetOrCreateAsync<T>(string cacheKey, Func<Task<T>> factory, TimeSpan? expiration = null);
+    Task RemoveAsync(string cacheKey);
+    Task<bool> ExistsAsync(string cacheKey);
+    Task<T> GetAsync<T>(string cacheKey);
+    Task SetAsync<T>(string cacheKey, T value, TimeSpan? expiration = null);
+}
+
+using Microsoft.Extensions.Caching.Memory;
+
+public class MemoryCacheService : ICacheService
+{
+    private readonly IMemoryCache _memoryCache;
+
+    public MemoryCacheService(IMemoryCache memoryCache)
+    {
+        _memoryCache = memoryCache;
+    }
+
+    public async Task<T> GetOrCreateAsync<T>(string cacheKey, Func<Task<T>> factory, TimeSpan? expiration = null)
+    {
+        if (!_memoryCache.TryGetValue(cacheKey, out T result))
+        {
+            result = await factory();
+            
+            var cacheEntryOptions = new MemoryCacheEntryOptions();
+            if (expiration.HasValue)
+            {
+                cacheEntryOptions.SetAbsoluteExpiration(expiration.Value);
+            }
+            
+            _memoryCache.Set(cacheKey, result, cacheEntryOptions);
+        }
+
+        return result;
+    }
+
+    public Task RemoveAsync(string cacheKey)
+    {
+        _memoryCache.Remove(cacheKey);
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> ExistsAsync(string cacheKey)
+    {
+        return Task.FromResult(_memoryCache.TryGetValue(cacheKey, out _));
+    }
+
+    public Task<T> GetAsync<T>(string cacheKey)
+    {
+        if (_memoryCache.TryGetValue(cacheKey, out T result))
+        {
+            return Task.FromResult(result);
+        }
+        return Task.FromResult(default(T));
+    }
+
+    public Task SetAsync<T>(string cacheKey, T value, TimeSpan? expiration = null)
+    {
+        var cacheEntryOptions = new MemoryCacheEntryOptions();
+        if (expiration.HasValue)
+        {
+            cacheEntryOptions.SetAbsoluteExpiration(expiration.Value);
+        }
+        
+        _memoryCache.Set(cacheKey, value, cacheEntryOptions);
+        return Task.CompletedTask;
+    }
+}
+
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
+
+public class DistributedCacheService : ICacheService
+{
+    private readonly IDistributedCache _distributedCache;
+
+    public DistributedCacheService(IDistributedCache distributedCache)
+    {
+        _distributedCache = distributedCache;
+    }
+
+    public async Task<T> GetOrCreateAsync<T>(string cacheKey, Func<Task<T>> factory, TimeSpan? expiration = null)
+    {
+        var cachedData = await _distributedCache.GetStringAsync(cacheKey);
+        if (cachedData != null)
+        {
+            return JsonSerializer.Deserialize<T>(cachedData);
+        }
+
+        var result = await factory();
+        await SetAsync(cacheKey, result, expiration);
+        return result;
+    }
+
+    public async Task RemoveAsync(string cacheKey)
+    {
+        await _distributedCache.RemoveAsync(cacheKey);
+    }
+
+    public async Task<bool> ExistsAsync(string cacheKey)
+    {
+        var cachedData = await _distributedCache.GetAsync(cacheKey);
+        return cachedData != null;
+    }
+
+    public async Task<T> GetAsync<T>(string cacheKey)
+    {
+        var cachedData = await _distributedCache.GetStringAsync(cacheKey);
+        return cachedData == null ? default : JsonSerializer.Deserialize<T>(cachedData);
+    }
+
+    public async Task SetAsync<T>(string cacheKey, T value, TimeSpan? expiration = null)
+    {
+        var options = new DistributedCacheEntryOptions();
+        if (expiration.HasValue)
+        {
+            options.SetAbsoluteExpiration(expiration.Value);
+        }
+
+        var serializedData = JsonSerializer.Serialize(value);
+        await _distributedCache.SetStringAsync(cacheKey, serializedData, options);
+    }
+}
