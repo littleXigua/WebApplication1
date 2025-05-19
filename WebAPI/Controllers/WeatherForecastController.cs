@@ -4,12 +4,13 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 
 namespace WebAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    //[Authorize]
+    [Authorize]
     //[Authorize(Roles ="Admin1")]
     public class WeatherForecastController : ControllerBase
     {
@@ -29,7 +30,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        public IEnumerable<WeatherForecast> Get([FromHeader] string X_Custom_Token)
         {
             var role=User.IsInRole("Admin");
 
@@ -89,8 +90,6 @@ namespace WebAPI.Controllers
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var jwt = tokenHandler.WriteToken(token);
-
-
 
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {

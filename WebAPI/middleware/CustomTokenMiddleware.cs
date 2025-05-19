@@ -1,9 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 
 public class CustomTokenMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly string _expectedToken;
+
 
     public CustomTokenMiddleware(RequestDelegate next, IConfiguration configuration)
     {
@@ -28,7 +32,7 @@ public class CustomTokenMiddleware
         //}
 
         // 验证自定义 token
-        if (!context.Request.Headers.TryGetValue("X-Custom-Token", out var token) ||
+        if (!context.Request.Headers.TryGetValue("X_Custom_Token", out var token) ||
             token != _expectedToken)
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -36,6 +40,16 @@ public class CustomTokenMiddleware
             return;
         }
 
+        var claims = new[] {
+            new Claim(ClaimTypes.NameIdentifier, "API User"),
+            new Claim(ClaimTypes.Name, "api-user"),
+            new Claim(ClaimTypes.Role, "superAdmin"),
+        };
+        var identity = new ClaimsIdentity(claims, NegotiateDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+        var ticket = new AuthenticationTicket(principal, NegotiateDefaults.AuthenticationScheme);
+
+        context.User.AddIdentity(identity);
         await _next(context);
     }
 }
