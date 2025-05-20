@@ -1,0 +1,122 @@
+private static RSAParameters GetRsaParametersFromPem(string pemString)
+{
+    // 去除PEM标记和换行符
+    string base64 = pemString
+        .Replace("-----BEGIN RSA PRIVATE KEY-----", "")
+        .Replace("-----END RSA PRIVATE KEY-----", "")
+        .Replace("\n", "")
+        .Trim();
+    
+    byte[] privateKeyBytes = Convert.FromBase64String(base64);
+    
+    // .NET Framework 4.0 需要手动解析ASN.1格式
+    // 这里简化处理，实际项目中应使用更健壮的解析方法
+    using (var stream = new System.IO.MemoryStream(privateKeyBytes))
+    using (var reader = new System.IO.BinaryReader(stream))
+    {
+        // 跳过ASN.1序列标记
+        reader.ReadByte(); // SEQUENCE标记
+        reader.ReadBytes((int)reader.ReadByte()); // 长度
+        
+        // 读取版本
+        reader.ReadBytes(3);
+        
+        // 读取模数(n)
+        reader.ReadByte();
+        int nLength = GetIntegerLength(reader);
+        byte[] modulus = reader.ReadBytes(nLength);
+        
+        // 读取公开指数(e)
+        reader.ReadByte();
+        int eLength = GetIntegerLength(reader);
+        byte[] exponent = reader.ReadBytes(eLength);
+        
+        // 读取私有指数(d)
+        reader.ReadByte();
+        int dLength = GetIntegerLength(reader);
+        byte[] d = reader.ReadBytes(dLength);
+        
+        // 其他参数(p, q, dp, dq, inverseQ)...
+        
+        return new RSAParameters
+        {
+            Modulus = modulus,
+            Exponent = exponent,
+            D = d,
+            // 设置其他参数...
+        };
+    }
+}
+
+private static int GetIntegerLength(System.IO.BinaryReader reader)
+{
+    byte b = reader.ReadByte();
+    if (b != 0x02) // INTEGER标记
+        throw new InvalidOperationException("Expected integer");
+    
+    int length = reader.ReadByte();
+    if (length == 0x81)
+    {
+        length = reader.ReadByte();
+    }
+    else if (length == 0x82)
+    {
+        byte hi = reader.ReadByte();
+        byte lo = reader.ReadByte();
+        length = (hi << 8) | lo;
+    }
+    
+    // 检查是否有前导零
+    if (reader.PeekChar() == 0x00)
+    {
+        reader.ReadByte();
+        length--;
+    }
+    
+    return length;
+}
+
+
+public string GenerateJwtToken(string privateKeyPem, string issuer, string audience, string subject, int expiresInMinutes)
+{
+    // 1. 从PEM加载私钥
+    RSAParameters rsaParams = GetRsaParametersFromPem(privateKeyPem);
+    
+    // 2. 创建RSA提供程序
+    using (var rsa = new RSACryptoServiceProvider())
+    {
+        rsa.ImportParameters(rsaParams);
+        
+        // 3. 创建签名凭证
+        var signingCredentials = new SigningCredentials(
+            new RsaSecurityKey(rsa),
+            SecurityAlgorithms.RsaSha256,
+            SecurityAlgorithms.Sha256Digest);
+        
+        // 4. 创建JWT
+        var now = DateTime.UtcNow;
+        var handler = new JwtSecurityTokenHandler();
+        
+        var token = handler.CreateJwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            subject: new ClaimsIdentity(new[] 
+            {
+                new Claim(ClaimTypes.Name, subject),
+                // 添加其他声明...
+            }),
+            notBefore: now,
+            expires: now.AddMinutes(expiresInMinutes),
+            issuedAt: now,
+            signingCredentials: signingCredentials);
+        
+        // 5. 生成令牌字符串
+        return handler.WriteToken(token);
+    }
+}
+
+
+
+
+
+
