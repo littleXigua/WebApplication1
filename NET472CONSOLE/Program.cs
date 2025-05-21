@@ -16,6 +16,10 @@ namespace NET472CONSOLE
             // KeyGeneratro.KeyTest();
 
 
+            var txt=@"
+
+"
+
             KeyGenerator.Create();
 
             Console.WriteLine("start");
