@@ -1,0 +1,101 @@
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddAuthentication("Development")
+        .AddScheme<FakeWindowsAuthenticationOptions, FakeWindowsAuthenticationHandler>(
+            "Development", options => { });
+}
+
+// 然后添加中间件
+app.UseAuthentication();
+app.UseAuthorization();
+
+public class FakeWindowsAuthenticationOptions : AuthenticationSchemeOptions { }
+
+public class FakeWindowsAuthenticationHandler : AuthenticationHandler<FakeWindowsAuthenticationOptions>
+{
+    public FakeWindowsAuthenticationHandler(
+        IOptionsMonitor<FakeWindowsAuthenticationOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        ISystemClock clock) : base(options, logger, encoder, clock) { }
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        // 伪造 Windows 身份
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Name, "DEV\\JohnDoe"),
+            new Claim(ClaimTypes.NameIdentifier, "S-1-5-21-1234567890-1234567890-1234567890-1001"),
+            new Claim(ClaimTypes.PrimarySid, "S-1-5-21-1234567890-1234567890-1234567890-1001"),
+            new Claim(ClaimTypes.PrimaryGroupSid, "S-1-5-21-1234567890-1234567890-1234567890-513"),
+            new Claim(ClaimTypes.Role, "Users"),
+            // 添加其他需要的声明
+        };
+        
+        var identity = new ClaimsIdentity(claims, "Windows");
+        var principal = new ClaimsPrincipal(identity);
+        var ticket = new AuthenticationTicket(principal, "Development");
+        
+        return Task.FromResult(AuthenticateResult.Success(ticket));
+    }
+}
+
+builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+    .AddNegotiate();
+
+// 在开发环境中添加模拟中间件
+if (builder.Environment.IsDevelopment())
+{
+    app.Use(async (context, next) =>
+    {
+        if (!context.User.Identity.IsAuthenticated)
+        {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, "DEV\\JohnDoe"),
+                // 其他声明...
+            };
+            
+            var identity = new ClaimsIdentity(claims, "Windows");
+            context.User = new ClaimsPrincipal(identity);
+        }
+        await next();
+    });
+}
+
+
+
+[ApiController]
+[Route("api/[controller]")]
+public class DevAuthController : ControllerBase
+{
+    [HttpGet("impersonate")]
+    public IActionResult Impersonate(string username)
+    {
+        if (!Environment.IsDevelopment())
+        {
+            return BadRequest("Only available in development");
+        }
+        
+        var domain = "DEV";
+        if (username.Contains("\\"))
+        {
+            var parts = username.Split('\\');
+            domain = parts[0];
+            username = parts[1];
+        }
+        
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Name, $"{domain}\\{username}"),
+            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+            // 其他声明...
+        };
+        
+        var identity = new ClaimsIdentity(claims, "Windows");
+        HttpContext.User = new ClaimsPrincipal(identity);
+        
+        return Ok($"Impersonating {domain}\\{username}");
+    }
+}
+
