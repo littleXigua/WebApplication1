@@ -16,9 +16,13 @@ namespace NET472CONSOLE
             // KeyGeneratro.KeyTest();
 
 
-            var txt=@"
+            string txt = @"CORp\e11111";
 
-"
+
+            Console.WriteLine(txt.GetUsernameWithoutDomain());
+
+
+            Console.Read();
 
             KeyGenerator.Create();
 

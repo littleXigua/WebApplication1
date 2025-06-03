@@ -80,7 +80,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="jwt\Class1.cs" />
+    <Compile Include="StringExtensions.cs" />
+    <Compile Include="jwt\JwtRS256Generator.cs" />
     <Compile Include="KeyGen\KeyGenerator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

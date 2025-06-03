@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
+using WebAPI.services;
 
 namespace WebAPI.Controllers
 {
@@ -15,6 +17,7 @@ namespace WebAPI.Controllers
     public class WeatherForecastController : ControllerBase
     {
         private IRsaKeyService ras;
+        private IStudentService _studentService;
 
         private static readonly string[] Summaries = new[]
         {
@@ -23,15 +26,19 @@ namespace WebAPI.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IRsaKeyService ras)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IRsaKeyService ras, IStudentService studentService)
         {
             _logger = logger;
             this.ras = ras;
+            _studentService = studentService;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get([FromHeader] string X_Custom_Token)
+        public async Task<IEnumerable<WeatherForecast>> Get([FromHeader] string X_Custom_Token)
         {
+
+            var s = await _studentService.GetStudentByIdAsync(6);
+
             var role=User.IsInRole("Admin");
 
             //var pkey= ras.GetPrivateKey();

@@ -1,10 +1,13 @@
 
 using System.Text;
+using EasyCaching.InMemory;
+using EasyCaching.Interceptor.AspectCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using WebAPI.services;
 
 namespace WebAPI
 {
@@ -53,6 +56,7 @@ namespace WebAPI
 
             builder.Services.AddScoped<IRsaKeyService, RsaKeyService>();
 
+        
             //builder.Services.Regisetrjwt();
 
             builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
@@ -68,6 +72,34 @@ namespace WebAPI
             //});
 
             //builder.Services.AddSingleton<IAuthorizationHandler, CustomTokenHandler>();
+
+
+            builder.Services.AddEasyCaching(options =>
+            {
+                // 使用内存缓存
+                options.UseInMemory(config =>
+                {
+                    config.DBConfig = new InMemoryCachingOptions
+                    {
+                        // 内存缓存大小限制
+                        SizeLimit = 1000
+                    };
+                    // 启用日志
+                    config.EnableLogging = true;
+                   
+                }, "default");
+            });
+
+           
+
+            // 配置拦截器
+            builder.Services.ConfigureAspectCoreInterceptor(options =>
+            {
+                options.CacheProviderName = "default";
+            });
+
+            builder.Services.AddTransient<IStudentService, StudentService>();
+
 
 
             var app = builder.Build();
