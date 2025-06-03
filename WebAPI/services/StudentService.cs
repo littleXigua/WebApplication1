@@ -2,6 +2,30 @@
 
 namespace WebAPI.services
 {
+
+
+    public class StudentRepo
+    { 
+        public static List<Student> list= new List<Student>()
+        {
+            new Student()
+            {
+                Id = 1,
+                Name = "John Doe"
+            },
+            new Student()
+            {
+                Id = 2,
+                Name = "Jane Smith"
+            },
+            new Student()
+            {
+                Id = 6,
+                Name = "Jane Smith"
+            }
+        };
+
+    }
     public class StudentService : IStudentService
     {
         public Task AddStudentAsync(Student student)
@@ -21,11 +45,10 @@ namespace WebAPI.services
 
         public Task<Student> GetStudentByIdAsync(int id)
         {
-            var s= new Student()
-            {
-                id = 1,
-                name = "John Doe"
-            };
+
+            Console.WriteLine("实际执行了 GetStudentByIdAsync");
+           
+            var s = StudentRepo.list.FirstOrDefault(x => x.Id == id);   
 
             return Task.FromResult<Student>(s);
         }
@@ -42,7 +65,7 @@ namespace WebAPI.services
         [EasyCachingAble(Expiration = 300)]
         Task<IEnumerable<Student>> GetAllStudentsAsync();
 
-        [EasyCachingAble(Expiration = 300)]
+        [EasyCachingAble(Expiration = 100,CacheProviderName ="m1",CacheKeyPrefix ="student_")]
         Task<Student> GetStudentByIdAsync(int id);
         Task AddStudentAsync(Student student);
         Task UpdateStudentAsync(Student student);
@@ -52,8 +75,8 @@ namespace WebAPI.services
 
     public class Student
     {
-        public string name { get; set; }
-        public int id { get; set; }
+        public string? Name { get; set; }
+        public int Id { get; set; }
     }
 
 }

@@ -19,7 +19,7 @@ namespace WebAPI
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(
@@ -74,33 +74,29 @@ namespace WebAPI
             //builder.Services.AddSingleton<IAuthorizationHandler, CustomTokenHandler>();
 
 
+            //builder.Services.AddScoped<IAspectCoreService, AspectCoreService>();
+
+
+            builder.Services.AddScoped<IStudentService, StudentService>();
+
             builder.Services.AddEasyCaching(options =>
             {
-                // 使用内存缓存
-                options.UseInMemory(config =>
-                {
-                    config.DBConfig = new InMemoryCachingOptions
-                    {
-                        // 内存缓存大小限制
-                        SizeLimit = 1000
-                    };
-                    // 启用日志
-                    config.EnableLogging = true;
-                   
-                }, "default");
+                // 内存缓存
+                options.UseInMemory("m1");
+
             });
 
-           
+
 
             // 配置拦截器
             builder.Services.ConfigureAspectCoreInterceptor(options =>
             {
-                options.CacheProviderName = "default";
+                options.CacheProviderName = "m1";
+                //options.CacheProviderName
             });
 
-            builder.Services.AddTransient<IStudentService, StudentService>();
 
-
+            builder.Services.AddControllers();
 
             var app = builder.Build();
 
@@ -114,14 +110,18 @@ namespace WebAPI
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
+                       
 
-           
-
-            app.UseMiddleware<CustomTokenMiddleware>();
+            //app.UseMiddleware<CustomTokenMiddleware>();
 
             app.MapControllers();
 
+            //app.UseEasyCaching();
+
             app.Run();
         }
+
+      
+
     }
 }
