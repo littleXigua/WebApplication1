@@ -19,8 +19,8 @@ namespace WebAPI.Controllers
         [HttpGet]
         public async Task<string> Get()
         {
-            var students = await _studentservice.GetStudentByIdAsync(6);
-            return students.Name ?? "No Name Found";
+            var students = await _studentservice.GetAllStudentsAsync();
+            return students[1].Name ?? "No Name Found";
         }
 
     }

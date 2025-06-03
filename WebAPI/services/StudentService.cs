@@ -38,9 +38,10 @@ namespace WebAPI.services
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Student>> GetAllStudentsAsync()
+        public Task<List<Student>> GetAllStudentsAsync()
         {
-            throw new NotImplementedException();
+            Console.WriteLine("实际执行了 GetAllStudentsAsync");
+            return Task.FromResult(StudentRepo.list);
         }
 
         public Task<Student> GetStudentByIdAsync(int id)
@@ -62,8 +63,8 @@ namespace WebAPI.services
 
     public interface IStudentService
     {
-        [EasyCachingAble(Expiration = 300)]
-        Task<IEnumerable<Student>> GetAllStudentsAsync();
+        [EasyCachingAble(Expiration = 100, CacheProviderName = "m1", CacheKeyPrefix = "student_all")]
+        Task<List<Student>> GetAllStudentsAsync();
 
         [EasyCachingAble(Expiration = 100,CacheProviderName ="m1",CacheKeyPrefix ="student_")]
         Task<Student> GetStudentByIdAsync(int id);
