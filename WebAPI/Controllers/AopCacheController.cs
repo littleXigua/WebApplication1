@@ -6,7 +6,7 @@ namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AopCacheController : ControllerBase
+    public class AopCacheController : Controller
     {
         private IStudentService _studentservice;
         public AopCacheController(IStudentService service)

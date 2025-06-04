@@ -1,4 +1,4 @@
-﻿using EasyCaching.Core.Interceptor;
+﻿
 
 namespace WebAPI.services
 {
@@ -62,11 +62,10 @@ namespace WebAPI.services
 
 
     public interface IStudentService
-    {
-        [EasyCachingAble(Expiration = 100, CacheProviderName = "m1", CacheKeyPrefix = "student_all")]
+    {       
         Task<List<Student>> GetAllStudentsAsync();
 
-        [EasyCachingAble(Expiration = 100,CacheProviderName ="m1",CacheKeyPrefix ="student_")]
+       
         Task<Student> GetStudentByIdAsync(int id);
         Task AddStudentAsync(Student student);
         Task UpdateStudentAsync(Student student);

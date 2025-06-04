@@ -6,7 +6,7 @@ namespace WebAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class TestController : ControllerBase
+    public class TestController : Controller
     {
         private readonly IEasyCachingProvider _cache;
 
