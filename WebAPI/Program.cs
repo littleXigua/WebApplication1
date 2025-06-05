@@ -1,12 +1,13 @@
 
 using System.Text;
+using AspectCore.Extensions.DependencyInjection;
 using AspectCore.Extensions.Hosting;
 using EasyCaching.Core;
 using EasyCaching.InMemory;
 using EasyCaching.Interceptor.AspectCore;
 
 using Microsoft.AspNetCore.Authorization;
-
+using Microsoft.OpenApi.Models;
 using WebAPI.services;
 
 namespace WebAPI
@@ -23,8 +24,13 @@ namespace WebAPI
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
-
             builder.Host.UseServiceContext();
+            builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory());
+
+            //builder.Services.ConfigureDynamicProxy(config =>
+            //{
+            //    config.NonAspectPredicates.Add("Microsoft.AspNetCore");
+            //});
 
             builder.Services.AddScoped<IAspectCoreService, AspectCoreService>();
 
@@ -46,7 +52,21 @@ namespace WebAPI
             //2 Castle  
             //builder.Services.ConfigureCastleInterceptor(options => options.CacheProviderName = EasyCachingConstValue.DefaultInMemoryName);
 
+
+
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "My API",
+                    Version = "v1",                    
+                });
+            });
+
             var app = builder.Build();
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 
@@ -54,7 +74,8 @@ namespace WebAPI
 
             app.MapControllers();
 
-          
+
+         
 
             app.Logger.LogInformation("App started!");
             app.Run();
