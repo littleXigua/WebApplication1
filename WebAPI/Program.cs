@@ -28,11 +28,6 @@ namespace WebAPI
             builder.Host.UseServiceContext();
             builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory());
 
-            //builder.Services.ConfigureDynamicProxy(config =>
-            //{
-            //    config.NonAspectPredicates.Add("Microsoft.AspNetCore");
-            //});
-
             builder.Services.AddScoped<IAspectCoreService, AspectCoreService>();
 
             builder.Services.AddEasyCaching(options =>
@@ -54,19 +49,9 @@ namespace WebAPI
             //builder.Services.ConfigureCastleInterceptor(options => options.CacheProviderName = EasyCachingConstValue.DefaultInMemoryName);
 
 
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = "My API",
-                    Version = "v1",
-                });
-            });
+            builder.Services.AddSwaggerGen();
 
-
-
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                 options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<AppDbContext>();
 
             var app = builder.Build();
 

@@ -1,21 +1,11 @@
-
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-using Newtonsoft.Json.Linq;
-using WebAPI.Models;
-using WebAPI.services;
-
-namespace WebAPI.Controllers
+namespace WEBAPI3.Controllers
 {
-    
-    [Route("[controller]")]    
-    [Authorize(Roles ="Admin1")]
-    public class WeatherForecastController : Controller
-    {  
+    [ApiController]
+    [Route("[controller]")]
+    public class WeatherForecastController : ControllerBase
+    {
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -26,18 +16,11 @@ namespace WebAPI.Controllers
         public WeatherForecastController(ILogger<WeatherForecastController> logger)
         {
             _logger = logger;
-          
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {
-            var role = User.IsInRole("Admin");
-
-            //var pkey= ras.GetPrivateKey();
-
-            // var publicKey = ras.GetPublicKey();
-
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
