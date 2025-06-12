@@ -7,6 +7,7 @@ using EasyCaching.InMemory;
 using EasyCaching.Interceptor.AspectCore;
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using WebAPI.services;
 
@@ -53,15 +54,19 @@ namespace WebAPI
             //builder.Services.ConfigureCastleInterceptor(options => options.CacheProviderName = EasyCachingConstValue.DefaultInMemoryName);
 
 
-
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "My API",
-                    Version = "v1",                    
+                    Version = "v1",
                 });
             });
+
+
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                 options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
@@ -73,9 +78,6 @@ namespace WebAPI
             app.UseAuthorization();
 
             app.MapControllers();
-
-
-         
 
             app.Logger.LogInformation("App started!");
             app.Run();

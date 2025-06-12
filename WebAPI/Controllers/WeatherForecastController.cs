@@ -14,9 +14,7 @@ namespace WebAPI.Controllers
     [Route("[controller]")]    
     //[Authorize(Roles ="Admin1")]
     public class WeatherForecastController : Controller
-    {      
-   
-
+    {  
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -33,14 +31,11 @@ namespace WebAPI.Controllers
         [HttpGet(Name = "GetWeatherForecast")]
         public async Task<IEnumerable<WeatherForecast>> Get([FromHeader] string X_Custom_Token)
         {
-                     
-
             var role=User.IsInRole("Admin");
 
             //var pkey= ras.GetPrivateKey();
 
             // var publicKey = ras.GetPublicKey();
-
 
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {

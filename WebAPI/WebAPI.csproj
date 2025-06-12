@@ -35,6 +35,8 @@
     <PackageReference Include="EasyCaching.Interceptor.AspectCore" Version="1.9.4-alpha20250317014249" />
     <PackageReference Include="EasyCaching.Memcached" Version="1.9.4-alpha20250317014249" />
     <PackageReference Include="EasyCaching.Serialization.Json" Version="1.9.4-alpha20250317014249" />
+    <PackageReference Include="EntityFramework" Version="6.5.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.17" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.4" />
   </ItemGroup>
 
